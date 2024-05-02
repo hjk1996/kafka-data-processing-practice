@@ -1,0 +1,11 @@
+FROM python:3.12.3-bullseye
+RUN pip install kafka-python faker
+WORKDIR /workidir
+ADD main.py /workidir/
+ARG TOPIC_NAME
+ENV TOPIC_NAME=${TOPIC_NAME}
+ARG PRODUCE_SPEED
+ENV PRODUCE_SPEED=${PRODUCE_SPEED}
+ARG BOOTSTRAP_SERVER
+ENV BOOTSTRAP_SERVER=${BOOTSTRAP_SERVER}  
+CMD [ "python", "main.py" ]

@@ -1,0 +1,58 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main # main 브랜치에 푸시되면 실행, 필요에 따라 변경 가능
+
+env:
+  BOOTSTRAP_SERVER: localhost:9092
+  TOPIC_NAME: stock_trades
+  BUCKET_NAME: khj-kafka-stock-bucket
+  GROUP_ID: 1818
+  PRODUCE_SPEED: 10
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Consumer Docker Image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./consumer
+          file: ./consumer/Dockerfile
+          tags: |
+            hjk1996/kafka-data-consumer:latest
+            hjk1996/kafka-data-consumer:${{ github.run_number }}
+          build-args: |
+            BOOTSTRAP_SERVER=${{ env.BOOTSTRAP_SERVER }}
+            TOPIC_NAME=${{ env.TOPIC_NAME }}
+            BUCKET_NAME=${{ env.BUCKET_NAME }}
+            GROUP_ID=${{ env.GROUP_ID }}
+          push: true
+
+      - name: Build and Push Producer Docker Image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./producer
+          file: ./producer/Dockerfile
+          tags: |
+            hjk1996/kafka-data-producer:latest
+            hjk1996/kafka-data-producer:${{ github.run_number }}
+          build-args: |
+            BOOTSTRAP_SERVER=${{ env.BOOTSTRAP_SERVER }}
+            TOPIC_NAME=${{ env.TOPIC_NAME }}
+            PRODUCE_SPEED=${{ env.PRODUCE_SPEED }}
+          push: true
